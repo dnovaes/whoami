@@ -1,0 +1,49 @@
+# GraphQL portfolio schema
+#
+
+type Experience {
+  id: ID!
+  title: String!
+  description: String!
+  year: Int!
+  company: String!
+  companyLink: String
+  startedAt: Timestamp
+  finishedAt: Timestamp
+}
+
+input NewExperience {
+  title: String!
+  description: String!
+  year: Int!
+  company: String!
+  companyLink: String
+  startedAt: Timestamp
+  finishedAt: Timestamp
+}
+
+type Contact {
+  id: ID!
+  name: String!
+  email: String!
+  message: String!
+  createdAt: Timestamp
+}
+
+input NewContact {
+  name: String!
+  email: String!
+  message: String!
+}
+
+type Query {
+  contacts: [Contact!]!
+  experiences: [Experience!]!
+}
+
+type Mutation {
+  createContact(input: NewContact!): Contact!
+  createExperience(input: NewExperience!): Experience!
+}
+
+scalar Timestamp
