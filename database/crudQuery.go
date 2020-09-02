@@ -20,6 +20,14 @@ func insert(coll *mongo.Collection, doc primitive.D) *mongo.InsertOneResult {
 	return result
 }
 
+func insertMany(coll *mongo.Collection, docs []interface{}) *mongo.InsertManyResult {
+	result, err := coll.InsertMany(context.Background(), docs)
+	if err != nil {
+		panic(err)
+	}
+	return result
+}
+
 func delete(coll *mongo.Collection, doc primitive.D) *mongo.DeleteResult {
 	result, err := coll.DeleteOne(context.Background(), doc)
 	if err != nil {

@@ -33,6 +33,33 @@ func TestInsert(t *testing.T) {
 	StopConnection()
 }
 
+func TestInsertMany(t *testing.T) {
+	StartConnection()
+	coll := getCollection("contacts")
+
+	docs := []interface{}{
+		bson.D{
+			{Key: "name", Value: "contactName #1"},
+			{Key: "email", Value: "askdjasdl@mail.com"},
+			{Key: "message", Value: "its a message #1"},
+			{Key: "createdAt", Value: 123455677},
+		},
+		bson.D{
+			{Key: "name", Value: "contactName #2"},
+			{Key: "email", Value: "askdjasdl2@mail.com"},
+			{Key: "message", Value: "its a message #2"},
+			{Key: "createdAt", Value: 123455677},
+		},
+	}
+
+	result := insertMany(coll, docs)
+	assert.NotNil(t, result.InsertedIDs)
+	assert.Equal(t, 2, len(result.InsertedIDs))
+	coll.Drop(nil)
+
+	StopConnection()
+}
+
 func TestFindAll(t *testing.T) {
 	StartConnection()
 
