@@ -7,29 +7,39 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"math/rand"
 	"time"
 
+	db "github.com/dnovaes/portfolio/database"
 	"github.com/dnovaes/portfolio/gqlgen/graph/generated"
 	"github.com/dnovaes/portfolio/gqlgen/graph/model"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func (r *mutationResolver) CreateContact(ctx context.Context, input model.NewContact) (*model.Contact, error) {
-	for i := 0; i < len(r.contacts); i++ {
-		if r.contacts[i].Message == input.Message {
-			return nil, errors.New("contact Message already exists")
-		}
+	currentTime := time.Now().UTC()
+	newObjectId := primitive.NewObjectID()
+
+	newContactDoc := &bson.D{
+		{"_id", newObjectId},
+		{"name", input.Name},
+		{"email", input.Email},
+		{"message", input.Message},
+		{"createdAt", &currentTime},
 	}
 
-	currentTime := time.Now().UTC()
+	collection := db.GetCollection("contacts")
+	result := db.Insert(collection, *newContactDoc)
+	if result.InsertedID == nil {
+		return nil, errors.New("Couldn't create new contact. Please contact the developer team")
+	}
 	newContact := &model.Contact{
-		ID:        fmt.Sprintf("T%d", rand.Int()),
+		ID:        result.InsertedID.(primitive.ObjectID),
 		Name:      input.Name,
 		Email:     input.Email,
 		Message:   input.Message,
 		CreatedAt: &currentTime,
 	}
-	r.contacts = append(r.contacts, newContact)
 	return newContact, nil
 }
 
@@ -53,10 +63,21 @@ func (r *mutationResolver) CreateExperience(ctx context.Context, input model.New
 	}
 	r.experiences = append(r.experiences, newExperience)
 	return newExperience, nil
+	return nil, nil
+}
+
+func (r *mutationResolver) DeleteContact(ctx context.Context, id primitive.ObjectID) (*model.Contact, error) {
+	deletedContact := db.FindAndDeleteContact(id)
+	if deletedContact == nil {
+		errorMessage := fmt.Sprintf("Couldn't delete contact: '%s' doesn't exist anymore", id.Hex())
+		return deletedContact, errors.New(errorMessage)
+	}
+	return deletedContact, nil
 }
 
 func (r *queryResolver) Contacts(ctx context.Context) ([]*model.Contact, error) {
-	return r.contacts, nil
+	result := db.FindAllContacts()
+	return result, nil
 }
 
 func (r *queryResolver) Experiences(ctx context.Context) ([]*model.Experience, error) {

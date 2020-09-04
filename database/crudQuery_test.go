@@ -3,21 +3,23 @@ package database
 import (
 	"github.com/stretchr/testify/assert"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"testing"
+	"time"
 )
 
 func TestGetCollection(t *testing.T) {
 	StartConnection()
 
-	collection := getCollection("contacts")
+	collection := GetCollection("contacts")
 	assert.NotNil(t, collection)
 
 	StopConnection()
 }
 
-func TestInsert(t *testing.T) {
+func TestInsertOne(t *testing.T) {
 	StartConnection()
-	coll := getCollection("contacts")
+	coll := GetCollection("contacts")
 
 	bsonDoc := bson.D{
 		{Key: "name", Value: "contactName #1"},
@@ -26,16 +28,16 @@ func TestInsert(t *testing.T) {
 		{Key: "createdAt", Value: 123455677},
 	}
 
-	result := insert(coll, bsonDoc)
+	result := Insert(coll, bsonDoc)
 	assert.NotNil(t, result.InsertedID)
-	deleteMany(coll, bsonDoc)
+	DeleteMany(coll, bsonDoc)
 
 	StopConnection()
 }
 
 func TestInsertMany(t *testing.T) {
 	StartConnection()
-	coll := getCollection("contacts")
+	coll := GetCollection("contacts")
 
 	docs := []interface{}{
 		bson.D{
@@ -52,7 +54,7 @@ func TestInsertMany(t *testing.T) {
 		},
 	}
 
-	result := insertMany(coll, docs)
+	result := InsertMany(coll, docs)
 	assert.NotNil(t, result.InsertedIDs)
 	assert.Equal(t, 2, len(result.InsertedIDs))
 	coll.Drop(nil)
@@ -63,28 +65,30 @@ func TestInsertMany(t *testing.T) {
 func TestFindAll(t *testing.T) {
 	StartConnection()
 
-	coll := getCollection("test_contacts")
+	coll := GetCollection("test_contacts")
 	coll.Drop(nil)
 
 	bsonDoc1 := bson.D{
 		{Key: "name", Value: "contactName #1"},
 		{Key: "email", Value: "askdjasdl@mail.com"},
 		{Key: "message", Value: "its a message #1"},
-		{Key: "createdAt", Value: 123455677},
+		{"createdAt", time.Unix(1599163827, 0)},
 	}
-	insert(coll, bsonDoc1)
+	Insert(coll, bsonDoc1)
+
 	bsonDoc2 := bson.D{
 		{Key: "name", Value: "contactName #2"},
 		{Key: "email", Value: "askdjasdl@mail.com"},
 		{Key: "message", Value: "its a message #2"},
-		{Key: "createdAt", Value: 123455677},
+		{"createdAt", time.Unix(1599163827, 0)},
 	}
-	insert(coll, bsonDoc2)
-	result := findAll(coll)
+	Insert(coll, bsonDoc2)
+	result := FindAll(coll)
+
 	assert.Equal(t, 2, len(result))
 
 	coll.Drop(nil)
-	result = findAll(coll)
+	result = FindAll(coll)
 	assert.Equal(t, 0, len(result))
 
 	StopConnection()
@@ -93,7 +97,7 @@ func TestFindAll(t *testing.T) {
 func TestDeleteOne(t *testing.T) {
 	StartConnection()
 
-	coll := getCollection("test_contacts")
+	coll := GetCollection("test_contacts")
 	coll.Drop(nil)
 
 	bsonDoc1 := bson.D{
@@ -102,12 +106,30 @@ func TestDeleteOne(t *testing.T) {
 		{Key: "message", Value: "its a message #1"},
 		{Key: "createdAt", Value: 123455677},
 	}
-	insert(coll, bsonDoc1)
-	resultDelete := delete(coll, bson.D{
+	Insert(coll, bsonDoc1)
+	resultDelete := Delete(coll, bson.D{
 		{Key: "name", Value: "contactName #1"},
 	})
 	assert.Equal(t, int64(1), resultDelete.DeletedCount)
 	coll.Drop(nil)
+
+	StopConnection()
+}
+
+func TestDeleteById(t *testing.T) {
+	StartConnection()
+
+	coll := GetCollection("contacts")
+	bsonDoc1 := bson.D{
+		{Key: "name", Value: "contactName #x"},
+		{Key: "email", Value: "askdjasdlx@mail.com"},
+		{Key: "message", Value: "its a message #x"},
+		{Key: "createdAt", Value: 123455677},
+	}
+	insertedDoc := Insert(coll, bsonDoc1)
+
+	deletedContact := FindAndDeleteContact(insertedDoc.InsertedID.(primitive.ObjectID))
+	assert.Equal(t, deletedContact.ID, insertedDoc.InsertedID)
 
 	StopConnection()
 }

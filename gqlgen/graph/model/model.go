@@ -3,11 +3,12 @@ package model
 import (
 	"errors"
 	"io"
+	"log"
 	"strconv"
-	_ "strings"
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // if the type referenced in .gqlgen.yml is a function that returns a marshaller we can use it to encode and decode
@@ -24,5 +25,20 @@ func UnmarshalTimestamp(v interface{}) (time.Time, error) {
 	if tmpStr, ok := v.(int64); ok {
 		return time.Unix(tmpStr, 0), nil
 	}
-	return time.Time{}, errors.New("time should be a unix timestamp")
+	return time.Time{}, errors.New("Error unmarshal timestamp: time should be a unix timestamp")
+}
+
+func MarshalID(id primitive.ObjectID) graphql.Marshaler {
+	return graphql.WriterFunc(func(w io.Writer) {
+		io.WriteString(w, strconv.Quote(id.Hex()))
+	})
+}
+
+func UnmarshalID(v interface{}) (primitive.ObjectID, error) {
+	objectId, err := primitive.ObjectIDFromHex(v.(string))
+	if err != nil {
+		log.Println(err)
+		return objectId, errors.New("Error unmarshal ID: Couldn't extract objectId from Hex")
+	}
+	return objectId, nil
 }

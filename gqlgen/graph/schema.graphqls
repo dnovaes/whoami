@@ -22,8 +22,12 @@ input NewExperience {
   finishedAt: Timestamp
 }
 
+directive @goField(forceResolver: Boolean, name: String) on INPUT_FIELD_DEFINITION
+    | FIELD_DEFINITION
+
+
 type Contact {
-  id: ID!
+  _id: ID! @goField(name: "id")
   name: String!
   email: String!
   message: String!
@@ -44,6 +48,7 @@ type Query {
 type Mutation {
   createContact(input: NewContact!): Contact!
   createExperience(input: NewExperience!): Experience!
+  deleteContact(id: ID!): Contact!
 }
 
 scalar Timestamp
