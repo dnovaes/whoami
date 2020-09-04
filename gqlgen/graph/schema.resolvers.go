@@ -51,8 +51,9 @@ func (r *mutationResolver) CreateExperience(ctx context.Context, input model.New
 			return nil, errors.New(errorMessage)
 		}
 	}
+	newObjectId := primitive.NewObjectID()
 	newExperience := &model.Experience{
-		ID:          fmt.Sprintf("T%d", rand.Int()),
+		ID:          newObjectId,
 		Title:       input.Title,
 		Description: input.Description,
 		Year:        input.Year,
