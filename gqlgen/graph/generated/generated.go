@@ -16,6 +16,7 @@ import (
 	"github.com/dnovaes/portfolio/gqlgen/graph/model"
 	gqlparser "github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // region    ************************** generated!.gotpl **************************
@@ -66,6 +67,7 @@ type ComplexityRoot struct {
 	Mutation struct {
 		CreateContact    func(childComplexity int, input model.NewContact) int
 		CreateExperience func(childComplexity int, input model.NewExperience) int
+		DeleteContact    func(childComplexity int, id primitive.ObjectID) int
 	}
 
 	Query struct {
@@ -77,6 +79,7 @@ type ComplexityRoot struct {
 type MutationResolver interface {
 	CreateContact(ctx context.Context, input model.NewContact) (*model.Contact, error)
 	CreateExperience(ctx context.Context, input model.NewExperience) (*model.Experience, error)
+	DeleteContact(ctx context.Context, id primitive.ObjectID) (*model.Contact, error)
 }
 type QueryResolver interface {
 	Contacts(ctx context.Context) ([]*model.Contact, error)
@@ -112,7 +115,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Contact.Email(childComplexity), true
 
-	case "Contact.id":
+	case "Contact._id":
 		if e.complexity.Contact.ID == nil {
 			break
 		}
@@ -212,6 +215,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.CreateExperience(childComplexity, args["input"].(model.NewExperience)), true
+
+	case "Mutation.deleteContact":
+		if e.complexity.Mutation.DeleteContact == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_deleteContact_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.DeleteContact(childComplexity, args["id"].(primitive.ObjectID)), true
 
 	case "Query.contacts":
 		if e.complexity.Query.Contacts == nil {
@@ -315,8 +330,12 @@ input NewExperience {
   finishedAt: Timestamp
 }
 
+directive @goField(forceResolver: Boolean, name: String) on INPUT_FIELD_DEFINITION
+    | FIELD_DEFINITION
+
+
 type Contact {
-  id: ID!
+  _id: ID! @goField(name: "id")
   name: String!
   email: String!
   message: String!
@@ -337,6 +356,7 @@ type Query {
 type Mutation {
   createContact(input: NewContact!): Contact!
   createExperience(input: NewExperience!): Experience!
+  deleteContact(id: ID!): Contact!
 }
 
 scalar Timestamp
@@ -354,7 +374,7 @@ func (ec *executionContext) field_Mutation_createContact_args(ctx context.Contex
 	var arg0 model.NewContact
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("input"))
-		arg0, err = ec.unmarshalNNewContact2githubᚗcomᚋdnovaesᚋgqlgenᚋgraphᚋmodelᚐNewContact(ctx, tmp)
+		arg0, err = ec.unmarshalNNewContact2githubᚗcomᚋdnovaesᚋportfolioᚋgqlgenᚋgraphᚋmodelᚐNewContact(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -369,12 +389,27 @@ func (ec *executionContext) field_Mutation_createExperience_args(ctx context.Con
 	var arg0 model.NewExperience
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("input"))
-		arg0, err = ec.unmarshalNNewExperience2githubᚗcomᚋdnovaesᚋgqlgenᚋgraphᚋmodelᚐNewExperience(ctx, tmp)
+		arg0, err = ec.unmarshalNNewExperience2githubᚗcomᚋdnovaesᚋportfolioᚋgqlgenᚋgraphᚋmodelᚐNewExperience(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
 	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_deleteContact_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 primitive.ObjectID
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("id"))
+		arg0, err = ec.unmarshalNID2goᚗmongodbᚗorgᚋmongoᚑdriverᚋbsonᚋprimitiveᚐObjectID(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
 	return args, nil
 }
 
@@ -431,7 +466,7 @@ func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArg
 
 // region    **************************** field.gotpl *****************************
 
-func (ec *executionContext) _Contact_id(ctx context.Context, field graphql.CollectedField, obj *model.Contact) (ret graphql.Marshaler) {
+func (ec *executionContext) _Contact__id(ctx context.Context, field graphql.CollectedField, obj *model.Contact) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -460,9 +495,9 @@ func (ec *executionContext) _Contact_id(ctx context.Context, field graphql.Colle
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(primitive.ObjectID)
 	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
+	return ec.marshalNID2goᚗmongodbᚗorgᚋmongoᚑdriverᚋbsonᚋprimitiveᚐObjectID(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Contact_name(ctx context.Context, field graphql.CollectedField, obj *model.Contact) (ret graphql.Marshaler) {
@@ -627,9 +662,9 @@ func (ec *executionContext) _Experience_id(ctx context.Context, field graphql.Co
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(primitive.ObjectID)
 	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
+	return ec.marshalNID2goᚗmongodbᚗorgᚋmongoᚑdriverᚋbsonᚋprimitiveᚐObjectID(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Experience_title(ctx context.Context, field graphql.CollectedField, obj *model.Experience) (ret graphql.Marshaler) {
@@ -899,7 +934,7 @@ func (ec *executionContext) _Mutation_createContact(ctx context.Context, field g
 	}
 	res := resTmp.(*model.Contact)
 	fc.Result = res
-	return ec.marshalNContact2ᚖgithubᚗcomᚋdnovaesᚋgqlgenᚋgraphᚋmodelᚐContact(ctx, field.Selections, res)
+	return ec.marshalNContact2ᚖgithubᚗcomᚋdnovaesᚋportfolioᚋgqlgenᚋgraphᚋmodelᚐContact(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_createExperience(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -940,7 +975,48 @@ func (ec *executionContext) _Mutation_createExperience(ctx context.Context, fiel
 	}
 	res := resTmp.(*model.Experience)
 	fc.Result = res
-	return ec.marshalNExperience2ᚖgithubᚗcomᚋdnovaesᚋgqlgenᚋgraphᚋmodelᚐExperience(ctx, field.Selections, res)
+	return ec.marshalNExperience2ᚖgithubᚗcomᚋdnovaesᚋportfolioᚋgqlgenᚋgraphᚋmodelᚐExperience(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_deleteContact(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Mutation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_deleteContact_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().DeleteContact(rctx, args["id"].(primitive.ObjectID))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Contact)
+	fc.Result = res
+	return ec.marshalNContact2ᚖgithubᚗcomᚋdnovaesᚋportfolioᚋgqlgenᚋgraphᚋmodelᚐContact(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_contacts(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -974,7 +1050,7 @@ func (ec *executionContext) _Query_contacts(ctx context.Context, field graphql.C
 	}
 	res := resTmp.([]*model.Contact)
 	fc.Result = res
-	return ec.marshalNContact2ᚕᚖgithubᚗcomᚋdnovaesᚋgqlgenᚋgraphᚋmodelᚐContactᚄ(ctx, field.Selections, res)
+	return ec.marshalNContact2ᚕᚖgithubᚗcomᚋdnovaesᚋportfolioᚋgqlgenᚋgraphᚋmodelᚐContactᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_experiences(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -1008,7 +1084,7 @@ func (ec *executionContext) _Query_experiences(ctx context.Context, field graphq
 	}
 	res := resTmp.([]*model.Experience)
 	fc.Result = res
-	return ec.marshalNExperience2ᚕᚖgithubᚗcomᚋdnovaesᚋgqlgenᚋgraphᚋmodelᚐExperienceᚄ(ctx, field.Selections, res)
+	return ec.marshalNExperience2ᚕᚖgithubᚗcomᚋdnovaesᚋportfolioᚋgqlgenᚋgraphᚋmodelᚐExperienceᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -2258,8 +2334,8 @@ func (ec *executionContext) _Contact(ctx context.Context, sel ast.SelectionSet, 
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Contact")
-		case "id":
-			out.Values[i] = ec._Contact_id(ctx, field, obj)
+		case "_id":
+			out.Values[i] = ec._Contact__id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -2366,6 +2442,11 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			}
 		case "createExperience":
 			out.Values[i] = ec._Mutation_createExperience(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "deleteContact":
+			out.Values[i] = ec._Mutation_deleteContact(ctx, field)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -2698,11 +2779,11 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 	return res
 }
 
-func (ec *executionContext) marshalNContact2githubᚗcomᚋdnovaesᚋgqlgenᚋgraphᚋmodelᚐContact(ctx context.Context, sel ast.SelectionSet, v model.Contact) graphql.Marshaler {
+func (ec *executionContext) marshalNContact2githubᚗcomᚋdnovaesᚋportfolioᚋgqlgenᚋgraphᚋmodelᚐContact(ctx context.Context, sel ast.SelectionSet, v model.Contact) graphql.Marshaler {
 	return ec._Contact(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNContact2ᚕᚖgithubᚗcomᚋdnovaesᚋgqlgenᚋgraphᚋmodelᚐContactᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Contact) graphql.Marshaler {
+func (ec *executionContext) marshalNContact2ᚕᚖgithubᚗcomᚋdnovaesᚋportfolioᚋgqlgenᚋgraphᚋmodelᚐContactᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Contact) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -2726,7 +2807,7 @@ func (ec *executionContext) marshalNContact2ᚕᚖgithubᚗcomᚋdnovaesᚋgqlge
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNContact2ᚖgithubᚗcomᚋdnovaesᚋgqlgenᚋgraphᚋmodelᚐContact(ctx, sel, v[i])
+			ret[i] = ec.marshalNContact2ᚖgithubᚗcomᚋdnovaesᚋportfolioᚋgqlgenᚋgraphᚋmodelᚐContact(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -2739,7 +2820,7 @@ func (ec *executionContext) marshalNContact2ᚕᚖgithubᚗcomᚋdnovaesᚋgqlge
 	return ret
 }
 
-func (ec *executionContext) marshalNContact2ᚖgithubᚗcomᚋdnovaesᚋgqlgenᚋgraphᚋmodelᚐContact(ctx context.Context, sel ast.SelectionSet, v *model.Contact) graphql.Marshaler {
+func (ec *executionContext) marshalNContact2ᚖgithubᚗcomᚋdnovaesᚋportfolioᚋgqlgenᚋgraphᚋmodelᚐContact(ctx context.Context, sel ast.SelectionSet, v *model.Contact) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -2749,11 +2830,11 @@ func (ec *executionContext) marshalNContact2ᚖgithubᚗcomᚋdnovaesᚋgqlgen�
 	return ec._Contact(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNExperience2githubᚗcomᚋdnovaesᚋgqlgenᚋgraphᚋmodelᚐExperience(ctx context.Context, sel ast.SelectionSet, v model.Experience) graphql.Marshaler {
+func (ec *executionContext) marshalNExperience2githubᚗcomᚋdnovaesᚋportfolioᚋgqlgenᚋgraphᚋmodelᚐExperience(ctx context.Context, sel ast.SelectionSet, v model.Experience) graphql.Marshaler {
 	return ec._Experience(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNExperience2ᚕᚖgithubᚗcomᚋdnovaesᚋgqlgenᚋgraphᚋmodelᚐExperienceᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Experience) graphql.Marshaler {
+func (ec *executionContext) marshalNExperience2ᚕᚖgithubᚗcomᚋdnovaesᚋportfolioᚋgqlgenᚋgraphᚋmodelᚐExperienceᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Experience) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -2777,7 +2858,7 @@ func (ec *executionContext) marshalNExperience2ᚕᚖgithubᚗcomᚋdnovaesᚋgq
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNExperience2ᚖgithubᚗcomᚋdnovaesᚋgqlgenᚋgraphᚋmodelᚐExperience(ctx, sel, v[i])
+			ret[i] = ec.marshalNExperience2ᚖgithubᚗcomᚋdnovaesᚋportfolioᚋgqlgenᚋgraphᚋmodelᚐExperience(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -2790,7 +2871,7 @@ func (ec *executionContext) marshalNExperience2ᚕᚖgithubᚗcomᚋdnovaesᚋgq
 	return ret
 }
 
-func (ec *executionContext) marshalNExperience2ᚖgithubᚗcomᚋdnovaesᚋgqlgenᚋgraphᚋmodelᚐExperience(ctx context.Context, sel ast.SelectionSet, v *model.Experience) graphql.Marshaler {
+func (ec *executionContext) marshalNExperience2ᚖgithubᚗcomᚋdnovaesᚋportfolioᚋgqlgenᚋgraphᚋmodelᚐExperience(ctx context.Context, sel ast.SelectionSet, v *model.Experience) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -2800,13 +2881,13 @@ func (ec *executionContext) marshalNExperience2ᚖgithubᚗcomᚋdnovaesᚋgqlge
 	return ec._Experience(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNID2string(ctx context.Context, v interface{}) (string, error) {
-	res, err := graphql.UnmarshalID(v)
+func (ec *executionContext) unmarshalNID2goᚗmongodbᚗorgᚋmongoᚑdriverᚋbsonᚋprimitiveᚐObjectID(ctx context.Context, v interface{}) (primitive.ObjectID, error) {
+	res, err := model.UnmarshalID(v)
 	return res, graphql.WrapErrorWithInputPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNID2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
-	res := graphql.MarshalID(v)
+func (ec *executionContext) marshalNID2goᚗmongodbᚗorgᚋmongoᚑdriverᚋbsonᚋprimitiveᚐObjectID(ctx context.Context, sel ast.SelectionSet, v primitive.ObjectID) graphql.Marshaler {
+	res := model.MarshalID(v)
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -2830,12 +2911,12 @@ func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.Selecti
 	return res
 }
 
-func (ec *executionContext) unmarshalNNewContact2githubᚗcomᚋdnovaesᚋgqlgenᚋgraphᚋmodelᚐNewContact(ctx context.Context, v interface{}) (model.NewContact, error) {
+func (ec *executionContext) unmarshalNNewContact2githubᚗcomᚋdnovaesᚋportfolioᚋgqlgenᚋgraphᚋmodelᚐNewContact(ctx context.Context, v interface{}) (model.NewContact, error) {
 	res, err := ec.unmarshalInputNewContact(ctx, v)
 	return res, graphql.WrapErrorWithInputPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNNewExperience2githubᚗcomᚋdnovaesᚋgqlgenᚋgraphᚋmodelᚐNewExperience(ctx context.Context, v interface{}) (model.NewExperience, error) {
+func (ec *executionContext) unmarshalNNewExperience2githubᚗcomᚋdnovaesᚋportfolioᚋgqlgenᚋgraphᚋmodelᚐNewExperience(ctx context.Context, v interface{}) (model.NewExperience, error) {
 	res, err := ec.unmarshalInputNewExperience(ctx, v)
 	return res, graphql.WrapErrorWithInputPath(ctx, err)
 }

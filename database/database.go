@@ -25,8 +25,9 @@ type DbCredentials struct {
 
 var Db DbConnection
 var credentials DbCredentials
-
 var hostURI string
+
+const database string = "dnovaes"
 
 func init() {
 	loadCredentials()
