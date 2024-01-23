@@ -10,7 +10,7 @@ import (
 	"github.com/dnovaes/portfolio/gqlgen/graph/model"
 )
 
-func GetCollection(collName string) *mongo.Collection {
+func GetCollection(database string, collName string) *mongo.Collection {
 	var client = Db.client
 	return client.Database(database).Collection(collName)
 }
@@ -63,7 +63,7 @@ func FindAll(coll *mongo.Collection) []bson.M {
 }
 
 func FindAllContacts() []*model.Contact {
-	coll := GetCollection("contacts")
+	coll := GetCollection("dnovaes", "contacts")
 	var results []*model.Contact
 	cursorResult, err := coll.Find(context.Background(), bson.D{})
 	if err != nil {
@@ -79,7 +79,7 @@ func FindAllContacts() []*model.Contact {
 }
 
 func FindAndDeleteContact(id primitive.ObjectID) *model.Contact {
-	coll := GetCollection("contacts")
+	coll := GetCollection("dnovaes", "contacts")
 
 	var deletedContact *model.Contact
 	err := coll.FindOneAndDelete(context.Background(), bson.D{{"_id", id}}).Decode(&deletedContact)

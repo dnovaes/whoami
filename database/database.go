@@ -3,7 +3,7 @@ package database
 import (
 	"context"
 	"fmt"
-	"github.com/spf13/viper"
+  "os"
 
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -25,38 +25,42 @@ type DbCredentials struct {
 
 var Db DbConnection
 var credentials DbCredentials
-var hostURI string
-
-const database string = "dnovaes"
 
 func init() {
 	loadCredentials()
-	hostURI = fmt.Sprintf("mongodb+srv://%s:%s@%s/%s?retryWrites=true&w=majority", credentials.user, credentials.pass, credentials.host, credentials.dbName)
 }
 
 func loadCredentials() {
-	viper.AddConfigPath("$HOME/Config/")
-	viper.SetConfigName("portfolio")
-	err := viper.ReadInConfig()
-	if err != nil {
-		if _, ok := err.(viper.ConfigParseError); ok {
-			fmt.Println(err)
-		} else {
-			fmt.Println("Unable to locate Config file.", err)
-			return
-		}
-	}
-
-	user := viper.Get("MONGO_USER").(string)
-	pass := viper.Get("MONGO_PASS").(string)
-	cluster := viper.Get("MONGO_HOST").(string)
-	dbName := viper.Get("MONGO_DBNAME").(string)
-	credentials = DbCredentials{user, pass, cluster, dbName}
+	user := os.Getenv("MONGO_USERNAME")
+	pass := ""
+	clusterHost := os.Getenv("MONGO_CLUSTER_HOST")
+	dbName := ""
+	credentials = DbCredentials{user, pass, clusterHost, dbName}
 }
 
 func StartConnection() {
 	ctx, cancel := context.WithCancel(context.Background())
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(hostURI))
+
+  hostURICertificate := fmt.Sprintf(
+    "mongodb+srv://%s/?authSource=%s&authMechanism=MONGODB-X509&retryWrites=true&w=majority&tlsCertificateKeyFile=%s",
+    credentials.host,
+    "%24external",
+    "/Users/diego.novaes/CredentialsConfig/whoami-cert.pem",
+  )
+  fmt.Println(hostURICertificate)
+
+  /*
+  var hostURIPassword string = fmt.Sprintf(
+    "mongodb+srv://%s:%s@%s/%s?retryWrites=true&w=majority",
+    credentials.user,
+    credentials.pass,
+    credentials.host,
+    credentials.dbName,
+  )
+  */
+
+  opts := options.Client().ApplyURI(hostURICertificate)
+	client, err := mongo.Connect(ctx, opts)
 	if err != nil {
 		panic(err)
 	}

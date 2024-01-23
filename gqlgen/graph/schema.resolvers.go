@@ -28,7 +28,7 @@ func (r *mutationResolver) CreateContact(ctx context.Context, input model.NewCon
 		{"createdAt", &currentTime},
 	}
 
-	collection := db.GetCollection("contacts")
+	collection := db.GetCollection("dnovaes", "contacts")
 	result := db.Insert(collection, *newContactDoc)
 	if result.InsertedID == nil {
 		return nil, errors.New("Couldn't create new contact. Please contact the developer team")
